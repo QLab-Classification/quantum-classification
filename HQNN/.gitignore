@@ -1,2 +1,4 @@
 data
 api-key.txt
+.DS_Store
+checkpoints
