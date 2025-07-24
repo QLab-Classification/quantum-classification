@@ -1,0 +1,6 @@
+data
+api-key.txt
+# Ignore Python virtual environments
+.venv/
+venv/
+env/
