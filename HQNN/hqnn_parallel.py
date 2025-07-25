@@ -17,6 +17,8 @@ from utils import save_model
 
 
 # --- Classical Convolutional Block ---
+# IF YOU GET AN ERROR WHEN SAVING / LOADING THE MODELS, TRY SWITCHING TO THE COMMENTED VERSION BELOW.
+
 # def ClassicalConvBlock(in_channels=1):
 #     return nn.Sequential(
 #         # First Convolutional Block
