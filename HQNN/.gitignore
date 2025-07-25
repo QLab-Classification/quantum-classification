@@ -2,3 +2,4 @@ data
 api-key.txt
 .DS_Store
 checkpoints
+__pycache__
