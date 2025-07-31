@@ -1,3 +1,6 @@
+import matplotlib
+matplotlib.use('TkAgg')  # <- Use this backend for live updating
+import matplotlib.pyplot as plt
 import os
 import argparse
 import math
@@ -13,10 +16,25 @@ from models.QGCC import PQWGAN_CC
 from models. QGQC import PQWGAN_QC
 
 def train(classes_str, dataset_str, patches, layers, n_data_qubits, batch_size, out_folder, checkpoint, randn, patch_shape, qcritic):
+    plt.ion()  # Turn on interactive mode
+
+    fig, ax = plt.subplots()
+    g_losses, d_losses, w_distances = [], [], []
+
+    g_line, = ax.plot([], [], label="Generator Loss", color='blue')
+    d_line, = ax.plot([], [], label="Critic Loss", color='red')
+    w_line, = ax.plot([], [], label="Wasserstein", color='green')
+
+    ax.set_xlabel("Steps")
+    ax.set_ylabel("Loss")
+    ax.set_title("GAN Training Metrics")
+    ax.legend()
+    fig.canvas.draw()
+
     classes = list(set([int(digit) for digit in classes_str]))
 
     device = torch.device("cpu")
-    n_epochs = 50
+    n_epochs = 10
     image_size = 28
     channels = 1
     if dataset_str == "mnist":
@@ -125,6 +143,19 @@ def train(classes_str, dataset_str, patches, layers, n_data_qubits, batch_size, 
                 optimizer_G.step()
 
                 print(f"[Epoch {epoch}/{n_epochs}] [Batch {i}/{len(dataloader)}] [D loss: {d_loss.item()}] [G loss: {g_loss.item()}] [Wasserstein Distance: {wasserstein_distance.item()}]")
+                g_losses.append(g_loss.item())
+                d_losses.append(d_loss.item())
+                w_distances.append(wasserstein_distance.item())
+
+                g_line.set_data(range(len(g_losses)), g_losses)
+                d_line.set_data(range(len(d_losses)), d_losses)
+                w_line.set_data(range(len(w_distances)), w_distances)
+
+                ax.relim()
+                ax.autoscale_view()
+                fig.canvas.draw()
+                fig.canvas.flush_events()
+
                 np.save(os.path.join(out_dir, 'wasserstein_distance.npy'), wasserstein_distance_history)
                 batches_done += n_critic
 
@@ -134,6 +165,9 @@ def train(classes_str, dataset_str, patches, layers, n_data_qubits, batch_size, 
                     torch.save(critic.state_dict(), os.path.join(out_dir, 'critic-{}.pt'.format(batches_done)))
                     torch.save(generator.state_dict(), os.path.join(out_dir, 'generator-{}.pt'.format(batches_done)))
                     print("saved images and state")
+    plt.ioff()
+    plt.show()
+
 
 if __name__ == "__main__":
     # Hardcoded values
