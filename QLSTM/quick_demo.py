@@ -7,8 +7,8 @@ This script runs a faster version for demonstration purposes
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
-from draft import QLSTM, ClassicalLSTM, StockPricePredictor
-from data_sources import StockDataCollector
+from helpers.draft import QLSTM, ClassicalLSTM, StockPricePredictor
+from helpers.data_sources import StockDataCollector
 from tqdm import tqdm
 
 def quick_demo():
@@ -97,6 +97,11 @@ def quick_demo():
     
     plt.tight_layout()
     plt.show()
+    
+    # Plot combined predictions comparison
+    print(f"\n📊 Generating combined prediction comparison plot...")
+    from helpers.plot_predictions import plot_combined_predictions
+    plot_combined_predictions(classical_lstm, qlstm, X_test, y_test, predictor.scaler)
     
     print(f"\n✅ Quick demo completed!")
     print(f"\n💡 For full training:")

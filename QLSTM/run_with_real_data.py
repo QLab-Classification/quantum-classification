@@ -5,32 +5,33 @@ This script demonstrates how to use real stock price data with the QLSTM impleme
 """
 
 import os
-from draft import QLSTM, ClassicalLSTM, StockPricePredictor
-from data_sources import StockDataCollector
+import matplotlib.pyplot as plt
+from helpers.draft import QLSTM, ClassicalLSTM, StockPricePredictor
+from helpers.data_sources import StockDataCollector
 
 def run_with_real_data():
     """Run QLSTM with real stock data"""
     print("🚀 QLSTM with Real Stock Data")
     print("=" * 40)
     
-    # Initialize data collector
-    collector = StockDataCollector()
+    # # Initialize data collector
+    # collector = StockDataCollector()
     
-    # Option 1: Download real data from Yahoo Finance
-    print("\n📊 Option 1: Download real data from Yahoo Finance")
-    print("   This will download Apple stock data for 2022-2023")
+    # # Option 1: Download real data from Yahoo Finance
+    # print("\n📊 Option 1: Download real data from Yahoo Finance")
+    # print("   This will download Apple stock data for 2022-2023")
     
-    # Uncomment the line below to download real data
-    # data = collector.get_yahoo_finance_data("AAPL", "2022-01-01", "2023-01-01")
-    # data_file = "data/AAPL_2022-01-01_2023-01-01.csv"
+    # # Uncomment the line below to download real data
+    # # data = collector.get_yahoo_finance_data("AAPL", "2022-01-01", "2023-01-01")
+    # # data_file = "data/AAPL_2022-01-01_2023-01-01.csv"
     
-    # Option 2: Use sample data (for demonstration)
-    print("\n📊 Option 2: Using sample data (for demonstration)")
-    data = collector.get_sample_data()
-    data_file = "data/sample_stock_data.csv"
+    # # Option 2: Use sample data (for demonstration)
+    # print("\n📊 Option 2: Using sample data (for demonstration)")
+    # data = collector.get_sample_data()
+    # data_file = "data/sample_stock_data.csv"
     
     # Option 3: Use your own CSV file
-    # data_file = "path/to/your/stock_data.csv"
+    data_file = "/Users/kanjonavosabud/Documents/quantum/quantum-classification/QLSTM/data/AAPL_2022-01-01_2023-01-01.csv"
     
     # Initialize predictor with real data
     print(f"\n🧠 Initializing QLSTM with data from: {data_file}")
@@ -59,10 +60,10 @@ def run_with_real_data():
     
     # Train models (shorter training for demo)
     print("\n🎯 Training Classical LSTM...")
-    classical_losses = predictor.train_model(classical_lstm, X_train, y_train, epochs=20, lr=0.01)
+    classical_losses = predictor.train_model(classical_lstm, X_train, y_train, epochs=3, lr=0.01)
     
     print("\n⚛️  Training QLSTM...")
-    qlstm_losses = predictor.train_model(qlstm, X_train, y_train, epochs=20, lr=0.01)
+    qlstm_losses = predictor.train_model(qlstm, X_train, y_train, epochs=3, lr=0.01)
     
     # Evaluate models
     print("\n📈 Evaluating models...")
@@ -82,7 +83,31 @@ def run_with_real_data():
     # Calculate improvements
     rmse_improvement = ((classical_rmse - qlstm_rmse) / classical_rmse) * 100
     accuracy_improvement = ((qlstm_accuracy - classical_accuracy) / classical_accuracy) * 100
-    
+
+    # Plot training losses
+    print(f"\n📊 Plotting training losses...")
+    plt.figure(figsize=(10, 4))
+    plt.subplot(1, 2, 1)
+    plt.plot(classical_losses, 'b-', label='Classical LSTM')
+    plt.title('Classical LSTM Training Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.grid(True)
+
+    plt.subplot(1, 2, 2)
+    plt.plot(qlstm_losses, 'r-', label='QLSTM')
+    plt.title('QLSTM Training Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.grid(True)
+
+    # Plot combined predictions comparison
+    print(f"\n📊 Generating combined prediction comparison plot...")
+    from helpers.plot_predictions import plot_combined_predictions
+    plot_combined_predictions(classical_lstm, qlstm, X_test, y_test, predictor.scaler)
+
     print(f"\n📊 Performance Improvements:")
     print(f"  RMSE Improvement: {rmse_improvement:.2f}%")
     print(f"  Accuracy Improvement: {accuracy_improvement:.2f}%")

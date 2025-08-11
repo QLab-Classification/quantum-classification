@@ -329,6 +329,78 @@ class StockPricePredictor:
         plt.ylabel('Loss')
         plt.grid(True)
         plt.show()
+    
+    def plot_predictions(self, model, X_test, y_test, model_name, scaler=None):
+        """
+        Plot actual vs predicted stock prices
+        
+        Args:
+            model: Trained model (Classical LSTM or QLSTM)
+            X_test: Test input data
+            y_test: Actual test targets
+            model_name: Name of the model for plot title
+            scaler: MinMaxScaler used for normalization (to denormalize predictions)
+        """
+        model.eval()
+        with torch.no_grad():
+            # Get predictions
+            predictions = model(X_test)
+            
+            # Handle different output shapes
+            if len(predictions.shape) > 2:
+                # If predictions have multiple time steps, use the last one
+                predictions = predictions[:, -1, :]
+            elif len(predictions.shape) == 2 and predictions.shape[1] > 1:
+                # If predictions have multiple columns, use the last one
+                predictions = predictions[:, -1:]
+            
+            # Ensure shapes match
+            if predictions.shape != y_test.shape:
+                predictions = predictions[:, :y_test.shape[1]]
+            
+            # Convert to numpy
+            y_true_np = y_test.numpy().flatten()
+            y_pred_np = predictions.numpy().flatten()
+            
+            # Denormalize if scaler is provided
+            if scaler is not None:
+                y_true_np = scaler.inverse_transform(y_true_np.reshape(-1, 1)).flatten()
+                y_pred_np = scaler.inverse_transform(y_pred_np.reshape(-1, 1)).flatten()
+                y_label = "Stock Price ($)"
+            else:
+                y_label = "Normalized Price"
+            
+            # Create the plot
+            plt.figure(figsize=(12, 6))
+            
+            # Plot actual vs predicted
+            plt.plot(y_true_np, label='Actual', color='blue', linewidth=2, alpha=0.8)
+            plt.plot(y_pred_np, label='Predicted', color='red', linewidth=2, alpha=0.8)
+            
+            plt.title(f'{model_name} - Actual vs Predicted Stock Prices')
+            plt.xlabel('Time Steps')
+            plt.ylabel(y_label)
+            plt.legend()
+            plt.grid(True, alpha=0.3)
+            
+            # Add performance metrics
+            mse = mean_squared_error(y_true_np, y_pred_np)
+            rmse = np.sqrt(mse)
+            accuracy = 1 - np.mean(np.abs(y_true_np - y_pred_np))
+            
+            plt.text(0.02, 0.98, f'RMSE: {rmse:.4f}\nAccuracy: {accuracy:.4f}', 
+                    transform=plt.gca().transAxes, verticalalignment='top',
+                    bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+            
+            plt.tight_layout()
+            plt.show()
+            
+            # Print performance summary
+            print(f"\n📊 {model_name} Prediction Performance:")
+            print(f"   RMSE: {rmse:.4f}")
+            print(f"   Accuracy: {accuracy:.4f}")
+            
+            return y_true_np, y_pred_np
 
 def main():
     """Main execution function"""
@@ -375,6 +447,11 @@ def main():
     # Plot training losses
     predictor.plot_results(classical_losses, "Classical LSTM")
     predictor.plot_results(qlstm_losses, "QLSTM")
+    
+    # Plot predictions comparison
+    print("\n📊 Generating prediction plots...")
+    predictor.plot_predictions(classical_lstm, X_test, y_test, "Classical LSTM", predictor.scaler)
+    predictor.plot_predictions(qlstm, X_test, y_test, "QLSTM", predictor.scaler)
     
     # Parameter count comparison
     classical_params = sum(p.numel() for p in classical_lstm.parameters())
