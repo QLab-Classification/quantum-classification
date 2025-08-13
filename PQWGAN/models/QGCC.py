@@ -32,7 +32,7 @@ class PQWGAN_CC():
             self.n_qubits = n_qubits
             self.n_ancillas = n_ancillas
             self.n_layers = n_layers
-            self.q_device = qml.device("default.qubit", wires=n_qubits)
+            self.q_device = qml.device("lightning.qubit", wires=n_qubits)
             self.params = nn.ParameterList([nn.Parameter(torch.rand(n_layers, n_qubits, 3), requires_grad=True) for _ in range(n_generators)])
             self.qnode = qml.QNode(self.circuit, self.q_device, interface="torch")
 
