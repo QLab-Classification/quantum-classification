@@ -246,10 +246,31 @@ class StockPricePredictor:
         X = np.array(X)
         y = np.array(y)
         
-        # Split data: 70% training, 30% testing
-        split_idx = int(0.7 * len(X))
-        X_train, X_test = X[:split_idx], X[split_idx:]
-        y_train, y_test = y[:split_idx], y[split_idx:]
+        # FIXED: Ensure temporal continuity in train/test split
+        # Instead of splitting sequences, split the original time series first
+        # Then create sequences from each split to maintain continuity
+        
+        # Split the original time series
+        split_idx = int(0.7 * len(prices_normalized))
+        train_prices = prices_normalized[:split_idx]
+        test_prices = prices_normalized[split_idx:]
+        
+        # Create training sequences
+        X_train, y_train = [], []
+        for i in range(len(train_prices) - self.sequence_length):
+            X_train.append(train_prices[i:i + self.sequence_length])
+            y_train.append(train_prices[i + self.sequence_length])
+        
+        # Create test sequences
+        X_test, y_test = [], []
+        for i in range(len(test_prices) - self.sequence_length):
+            X_test.append(test_prices[i:i + self.sequence_length])
+            y_test.append(test_prices[i + self.sequence_length])
+        
+        X_train = np.array(X_train)
+        y_train = np.array(y_train)
+        X_test = np.array(X_test)
+        y_test = np.array(y_test)
         
         # Convert to PyTorch tensors
         X_train = torch.FloatTensor(X_train).unsqueeze(-1)
